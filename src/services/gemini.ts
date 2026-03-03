@@ -10,10 +10,24 @@ export interface GenerationOptions {
 export async function generateWallpaper(
   imageBase64: string,
   mimeType: string,
-  options: GenerationOptions
+  options: GenerationOptions,
+  userApiKey?: string
 ): Promise<string> {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const apiKey = userApiKey || process.env.GEMINI_API_KEY;
+    
+    // Debug logging (masked)
+    if (apiKey) {
+      console.log(`Using API Key: ${apiKey.substring(0, 4)}... (Length: ${apiKey.length})`);
+    } else {
+      console.log("No API Key found.");
+    }
+
+    if (!apiKey) {
+      throw new Error("API Key is missing. Please set GEMINI_API_KEY in your environment variables or provide it in the app.");
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
     
     // Always use the free model as requested
     const model = "gemini-2.5-flash-image";
@@ -65,7 +79,8 @@ export async function generateWallpaper(
     // It might be in candidates[0].content.parts
     const parts = response.candidates?.[0]?.content?.parts;
     if (!parts) {
-      throw new Error("No content generated");
+      console.log("Full Response:", JSON.stringify(response, null, 2));
+      throw new Error("The AI failed to generate an image. This might be due to safety filters or service load. Please try a different image.");
     }
 
     for (const part of parts) {
@@ -74,9 +89,13 @@ export async function generateWallpaper(
       }
     }
 
-    throw new Error("No image generated in response");
-  } catch (error) {
+    throw new Error("No image data found in the response.");
+  } catch (error: any) {
     console.error("Error generating wallpaper:", error);
-    throw error;
+    // Return a user-friendly error message
+    if (error.message.includes("API Key")) {
+      throw error;
+    }
+    throw new Error(error.message || "Failed to generate wallpaper. Please try again.");
   }
 }
