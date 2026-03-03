@@ -105,28 +105,42 @@ export default function App() {
               className="absolute top-20 right-6 z-50 w-80 bg-[#111] border border-white/10 rounded-xl p-4 shadow-2xl"
             >
               <h3 className="text-sm font-medium mb-3">Settings</h3>
-              <div className="space-y-2">
-                <label className="text-xs text-white/50 block">Gemini API Key (Optional)</label>
-                <input 
-                  type="password" 
-                  value={userApiKey}
-                  onChange={(e) => setUserApiKey(e.target.value)}
-                  placeholder="Enter your API key..."
-                  className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/30"
-                />
-                <div className="flex flex-col gap-1">
-                  <p className="text-[10px] text-white/30">
-                    Required if deploying to Vercel/Netlify without environment variables.
-                  </p>
-                  <a 
-                    href="https://aistudio.google.com/app/apikey" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-[10px] text-blue-400 hover:text-blue-300 underline"
-                  >
-                    Get a free API key here
-                  </a>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-white/50 block">Gemini API Key (Optional)</label>
+                  <input 
+                    type="password" 
+                    value={userApiKey}
+                    onChange={(e) => setUserApiKey(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        setShowSettings(false);
+                      }
+                    }}
+                    placeholder="Enter your API key..."
+                    className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/30"
+                  />
+                  <div className="flex flex-col gap-1">
+                    <p className="text-[10px] text-white/30">
+                      Required if deploying to Vercel/Netlify without environment variables.
+                    </p>
+                    <a 
+                      href="https://aistudio.google.com/app/apikey" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-blue-400 hover:text-blue-300 underline"
+                    >
+                      Get a free API key here
+                    </a>
+                  </div>
                 </div>
+                
+                <button
+                  onClick={() => setShowSettings(false)}
+                  className="w-full py-2 rounded-lg bg-white text-black text-xs font-medium hover:bg-white/90 transition-colors"
+                >
+                  Save & Close
+                </button>
               </div>
             </motion.div>
           )}
