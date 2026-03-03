@@ -7,6 +7,22 @@ export interface GenerationOptions {
   pcPosition: 'center' | 'left' | 'right';
 }
 
+export async function validateApiKey(apiKey: string): Promise<boolean> {
+  if (!apiKey) return false;
+  try {
+    const ai = new GoogleGenAI({ apiKey });
+    // Use a lightweight model for validation
+    await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: "test",
+    });
+    return true;
+  } catch (error) {
+    console.error("API Key validation failed:", error);
+    return false;
+  }
+}
+
 export async function generateWallpaper(
   imageBase64: string,
   mimeType: string,
