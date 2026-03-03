@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, Download, Loader2, Sparkles, Image as ImageIcon, X, Smartphone, Monitor, LayoutTemplate, AlignCenter, AlignLeft, AlignRight } from 'lucide-react';
+import { Upload, Download, Loader2, Sparkles, Image as ImageIcon, X, Smartphone, Monitor, LayoutTemplate, AlignCenter, AlignLeft, AlignRight, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Dropzone } from './components/Dropzone';
 import { generateWallpaper } from './services/gemini';
@@ -22,6 +22,8 @@ export default function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState<string>('image/png');
+  const [userApiKey, setUserApiKey] = useState<string>('');
+  const [showSettings, setShowSettings] = useState(false);
   
   const [options, setOptions] = useState<GenerationOptions>({
     type: 'ios',
@@ -53,11 +55,14 @@ export default function App() {
       // Extract base64 data (remove prefix)
       const base64Data = originalImage.split(',')[1];
       
-      const result = await generateWallpaper(base64Data, mimeType, options);
+      const result = await generateWallpaper(base64Data, mimeType, options, userApiKey);
       setGeneratedImage(result);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError('Failed to generate wallpaper. Please try again.');
+      setError(err.message || 'Failed to generate wallpaper. Please try again.');
+      if (err.message.includes("API Key")) {
+        setShowSettings(true);
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -82,7 +87,51 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-white/20">
-      <div className="max-w-6xl mx-auto px-6 py-12 md:py-20">
+      <div className="max-w-6xl mx-auto px-6 py-12 md:py-20 relative">
+        <button 
+          onClick={() => setShowSettings(!showSettings)}
+          className="absolute top-6 right-6 p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-colors"
+          title="Settings"
+        >
+          <Settings className="w-5 h-5" />
+        </button>
+
+        <AnimatePresence>
+          {showSettings && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute top-20 right-6 z-50 w-80 bg-[#111] border border-white/10 rounded-xl p-4 shadow-2xl"
+            >
+              <h3 className="text-sm font-medium mb-3">Settings</h3>
+              <div className="space-y-2">
+                <label className="text-xs text-white/50 block">Gemini API Key (Optional)</label>
+                <input 
+                  type="password" 
+                  value={userApiKey}
+                  onChange={(e) => setUserApiKey(e.target.value)}
+                  placeholder="Enter your API key..."
+                  className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/30"
+                />
+                <div className="flex flex-col gap-1">
+                  <p className="text-[10px] text-white/30">
+                    Required if deploying to Vercel/Netlify without environment variables.
+                  </p>
+                  <a 
+                    href="https://aistudio.google.com/app/apikey" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-[10px] text-blue-400 hover:text-blue-300 underline"
+                  >
+                    Get a free API key here
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <header className="mb-16 text-center">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -205,7 +254,7 @@ export default function App() {
                                 onClick={() => setOptions(prev => ({ ...prev, iosMode: 'clock' }))}
                                 className={`px-4 py-3 rounded-xl text-sm font-medium transition-all border ${options.iosMode === 'clock' ? 'bg-white text-black border-white' : 'bg-white/5 text-white/60 border-transparent hover:bg-white/10'}`}
                               >
-                                Clock Space
+                                Make room for clock
                               </button>
                             </div>
                           </div>
